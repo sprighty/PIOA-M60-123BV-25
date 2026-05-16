@@ -3,7 +3,7 @@ from .backend.memory import create_record, select_record
 # Функция вывода текстового меню в консоль.
 def _print_menu() -> None:
     # Символ \n обозначает перевод строки.
-    print("\n=== База студентов ===")
+    print("\n=== Магазин Авто ===")
     print("1. Добавить запись")
     print("2. Показать все записи")
     print("3. Найти записи по фильтру")
@@ -26,18 +26,18 @@ def _read_int(prompt: str) -> int:
             print("Ошибка: введите целое число.")
 
 # Функция добавления новой записи в базу данных.
-def _add_student() -> None:
+def _add_car() -> None:
     print("\nДобавление записи")
 
-    student_id = _read_int("id: ")
-    first_name = input("first_name: ").strip()
-    second_name = input("second_name: ").strip()
+    car_id = _read_int("id: ")
+    brand = input("brand: ").strip()
+    model = input("model: ").strip()
     age = _read_int("age: ")
-    sex = input("sex: ").strip()
+    horsepower = input("horsepower: ")
 
     try:
         # Вызов функции слоя бизнес-логики.
-        record = create_record(student_id, first_name, second_name, age, sex)
+        record = create_record(car_id, brand, model, age, horsepower)
 
         # В случае успешного добавления запись выводится в консоль.
         print(f"Запись добавлена: {record}")
@@ -47,7 +47,7 @@ def _add_student() -> None:
         print(f"Ошибка: {exc}")
 
 # Вспомогательная функция вывода списка записей.
-def _print_records(records: list[tuple[int, str, str, int, str]]) -> None:
+def _print_records(records: list[tuple[int, str, str, int, int]]) -> None:
     # Проверка на пустой список.
     if not records:
         print("Записи не найдены.")
@@ -58,7 +58,7 @@ def _print_records(records: list[tuple[int, str, str, int, str]]) -> None:
         print(record)
 
 # Функция вывода всех записей из базы данных.
-def _show_all_students() -> None:
+def _show_all_cars() -> None:
     print("\nСписок записей")
     _print_records(select_record())
 
@@ -77,25 +77,25 @@ def _read_optional_int(prompt: str) -> int | None:
             print("Ошибка: введите целое число или оставьте поле пустым.")
 
 # Функция поиска записей по заданным фильтрам.
-def _find_students_by_filter() -> None:
+def _find_cars_by_filter() -> None:
     print("\nПоиск по фильтру (Enter = пропустить поле)")
 
-    student_id = _read_optional_int("id: ")
+    car_id = _read_optional_int("id: ")
 
     # Оператор `or` возвращает первое истинное значение.
     # Если строка после strip() пуста, будет возвращено None.
-    first_name = input("first_name: ").strip() or None
-    second_name = input("second_name: ").strip() or None
+    brand = input("brand: ").strip() or None
+    model = input("model: ").strip() or None
 
     age = _read_optional_int("age: ")
-    sex = input("sex: ").strip() or None
+    horsepower = input("horsepower: ").strip() or None
 
     records = select_record(
-        student_id=student_id,
-        first_name=first_name,
-        second_name=second_name,
+        car_id=car_id,
+        brand=brand,
+        model=model,
         age=age,
-        sex=sex,
+        horsepower=horsepower,
     )
 
     _print_records(records)
@@ -118,13 +118,13 @@ def run() -> None:
 
         # Диспетчеризация пользовательской команды.
         if action == "1":
-            _add_student()
+            _add_car()
 
         elif action == "2":
-            _show_all_students()
+            _show_all_cars()
 
         elif action == "3":
-            _find_students_by_filter()
+            _find_cars_by_filter()
 
         elif action == "0":
             # Завершение работы программы.

@@ -17,24 +17,25 @@ def delete_record():
     """Удаляет запись из таблицы по идентификатору или фильтру."""
     pass
 
+
 # Определение пользовательского алиаса типа для записи таблицы.
 # В качестве структуры записи используется кортеж,
 # поскольку кортеж является неизменяемым типом данных.
-# Структура записи Student: (id, first_name, second_name, age, sex)
-type StudentRecord = tuple[int, str, str, int, str]
+# Структура записи Car: (id, first_name, second_name, age, sex)
+type CarRecord = tuple[int, str, str, int, int]
 
-# Таблица Student представлена списком записей (кортежей).
-Student: list[StudentRecord] = []
+# Таблица Car представлена списком записей (кортежей).
+Car: list[CarRecord] = []
 
 def create_record(
-    student_id: int,   # Уникальный идентификатор записи
-    first_name: str,   # Имя
-    second_name: str,  # Фамилия
+    car_id: int,   # Уникальный идентификатор записи
+    brand: str,   # Имя
+    model: str,  # Фамилия
     age: int,          # Возраст
-    sex: str,          # Пол
-) -> StudentRecord:
+    horsepower: int,          # Пол
+) -> CarRecord:
     """
-    Создаёт новую запись и добавляет её в таблицу Student.
+    Создаёт новую запись и добавляет её в таблицу Car.
 
     Выполняется валидация возраста и проверка уникальности идентификатора.
     В случае нарушения условий возбуждается исключение ValueError.
@@ -42,41 +43,41 @@ def create_record(
 
     # Проверка корректности возраста.
     # Возраст не может быть отрицательным значением.
-    if age < 0:
-        raise ValueError("Поле age не может быть отрицательным.")
+    if age > 2026 or age < 1885:
+        raise ValueError("Неправильный год выпуска.")
 
     # Проверка уникальности идентификатора.
     # Функция any() возвращает True, если хотя бы один элемент
     # последовательности удовлетворяет условию.
-    if any(record[0] == student_id for record in Student):
-        raise ValueError(f"Запись с id={student_id} уже существует.")
+    if any(record[0] == car_id for record in Car):
+        raise ValueError(f"Запись с id={car_id} уже существует.")
 
     # Формирование новой записи.
     # Метод strip() удаляет пробельные символы
     # в начале и в конце строки.
-    new_record: StudentRecord = (
-        student_id,
-        first_name.strip(),
-        second_name.strip(),
+    new_record: CarRecord = (
+        car_id,
+        brand.strip(),
+        model.strip(),
         age,
-        sex.strip(),
+        horsepower,
     )
 
     # Добавление записи в таблицу.
-    Student.append(new_record)
+    Car.append(new_record)
 
     # Возврат созданной записи.
     return new_record
 
 def select_record(
-    student_id: int | None = None,   # Фильтр по идентификатору
-    first_name: str | None = None,   # Фильтр по имени
-    second_name: str | None = None,  # Фильтр по фамилии
+    car_id: int | None = None,   # Фильтр по идентификатору
+    brand: str | None = None,   # Фильтр по имени
+    model: str | None = None,  # Фильтр по фамилии
     age: int | None = None,          # Фильтр по возрасту
-    sex: str | None = None,          # Фильтр по полу
-) -> list[StudentRecord]:
+    horsepower: int | None = None,          # Фильтр по полу
+) -> list[CarRecord]:
     """
-    Выполняет выборку записей из таблицы Student
+    Выполняет выборку записей из таблицы Car
     в соответствии с переданными фильтрами.
 
     Если фильтры не заданы, возвращается копия всей таблицы.
@@ -87,37 +88,37 @@ def select_record(
     # чтобы предотвратить изменение исходной таблицы
     # внешним кодом.
     if (
-        student_id is None
-        and first_name is None
-        and second_name is None
+        car_id is None
+        and brand is None
+        and model is None
         and age is None
-        and sex is None
+        and horsepower is None
     ):
-        return Student.copy()
+        return Car.copy()
 
     # Формирование результирующего списка.
-    result: list[StudentRecord] = []
+    result: list[CarRecord] = []
 
     # Итерация по всем записям таблицы.
-    for record in Student:
+    for record in Car:
 
         # Проверка соответствия каждому фильтру.
         # Если фильтр задан и запись ему не соответствует,
         # выполняется переход к следующей итерации цикла.
 
-        if student_id is not None and record[0] != student_id:
+        if car_id is not None and record[0] != car_id:
             continue
 
-        if first_name is not None and record[1] != first_name:
+        if brand is not None and record[1] != brand:
             continue
 
-        if second_name is not None and record[2] != second_name:
+        if model is not None and record[2] != model:
             continue
 
         if age is not None and record[3] != age:
             continue
 
-        if sex is not None and record[4] != sex:
+        if horsepower is not None and record[4] != horsepower:
             continue
 
         # Если запись удовлетворяет всем заданным условиям,
