@@ -84,7 +84,7 @@ def _find_cars_by_filter() -> None:
     model = input("model: ").strip() or None
 
     age = _read_optional_int("age: ")
-    horsepower = input("horsepower: ").strip() or None
+    horsepower = _read_optional_int("horsepower: ") or None
 
     records = select_record(
         car_id=car_id,
