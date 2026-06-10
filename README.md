@@ -4,15 +4,23 @@
 
 Структура проекта
 
- src/
- └─ db/
-  └── backend/
-   │  ├── __init__.py
-   │  └── memory.py
-   │
-   ├── __init__.py
-   ├── __main__.py
-   └── tui.py
+│
+├── src/
+│ └── db/
+│   └── backend/
+│   │  ├── __init__.py
+|      ├── errors.py
+│   │  └── memory.py
+│   │
+│   ├── __init__.py
+│   ├── __main__.py
+│   └── tui.py
+│
+├── tests/
+| ├── __init__.py
+│ └── test_memory.py
+│
+└── README.md
 
 Реализованная функциональность
 
