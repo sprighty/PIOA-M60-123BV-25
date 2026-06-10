@@ -1,8 +1,10 @@
-from .backend.memory import create_record, select_record
+from .backend.memory import CarTable
+from .backend.errors import InvalidCarDataError, DuplicateIDError
+
+car_table = CarTable()
 
 
 def _print_menu() -> None:
-
     print("\n=== Магазин Авто ===")
     print("1. Добавить запись")
     print("2. Показать все записи")
@@ -11,16 +13,11 @@ def _print_menu() -> None:
 
 
 def _read_int(prompt: str) -> int:
-
     while True:
-
-        # в начале и в конце строки.
         raw = input(prompt).strip()
         try:
-
             return int(raw)
         except ValueError:
-
             print("Ошибка: введите целое число.")
 
 
@@ -30,27 +27,23 @@ def _add_car() -> None:
     car_id = _read_int("id: ")
     brand = input("brand: ").strip()
     model = input("model: ").strip()
-    age = _read_int("age: ")
-    horsepower = input("horsepower: ")
+    year = _read_int("year: ")
+    horsepower = _read_int("horsepower: ")
 
     try:
-
-        record = create_record(car_id, brand, model, age, horsepower)
-
-
+        record = car_table.create_record(
+            car_id, brand, model, year, horsepower
+        )
         print(f"Запись добавлена: {record}")
 
-    except ValueError as exc:
-
+    except (InvalidCarDataError, DuplicateIDError) as exc:
         print(f"Ошибка: {exc}")
 
 
 def _print_records(records: list[tuple[int, str, str, int, int]]) -> None:
-
     if not records:
         print("Записи не найдены.")
         return
-
 
     for record in records:
         print(record)
@@ -58,7 +51,7 @@ def _print_records(records: list[tuple[int, str, str, int, int]]) -> None:
 
 def _show_all_cars() -> None:
     print("\nСписок записей")
-    _print_records(select_record())
+    _print_records(car_table.select_record())
 
 
 def _read_optional_int(prompt: str) -> int | None:
@@ -78,38 +71,26 @@ def _find_cars_by_filter() -> None:
     print("\nПоиск по фильтру (Enter = пропустить поле)")
 
     car_id = _read_optional_int("id: ")
-
-
     brand = input("brand: ").strip() or None
     model = input("model: ").strip() or None
+    year = _read_optional_int("year: ")
+    horsepower = _read_optional_int("horsepower: ")
 
-    age = _read_optional_int("age: ")
-    horsepower = _read_optional_int("horsepower: ") or None
-
-    records = select_record(
+    records = car_table.select_record(
         car_id=car_id,
         brand=brand,
         model=model,
-        age=age,
+        year=year,
         horsepower=horsepower,
     )
 
     _print_records(records)
 
+
 def run() -> None:
-    """
-    Запускает основной цикл текстового пользовательского интерфейса.
-
-    Цикл выполняется до тех пор, пока пользователь явно
-    не выберет завершение программы.
-    """
     while True:
-
         _print_menu()
-
-
         action = input("Выберите действие: ").strip()
-
 
         if action == "1":
             _add_car()
@@ -121,10 +102,8 @@ def run() -> None:
             _find_cars_by_filter()
 
         elif action == "0":
-
             print("Выход из программы.")
             break
 
         else:
-
             print("Неизвестная команда. Повторите ввод.")
