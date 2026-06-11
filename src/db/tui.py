@@ -1,109 +1,114 @@
-from .backend.memory import CarTable
+from .backend.memory import MemoryDatabase
+from .backend.file import FileDatabase
 from .backend.errors import InvalidCarDataError, DuplicateIDError
 
-car_table = CarTable()
 
+class TUI:
+    def __init__(self) -> None:
+        print("Выберите тип базы данных:")
+        print("1. Memory")
+        print("2. File")
 
-def _print_menu() -> None:
-    print("\n=== Магазин Авто ===")
-    print("1. Добавить запись")
-    print("2. Показать все записи")
-    print("3. Найти записи по фильтру")
-    print("0. Выход")
+        choice = input(">> ").strip()
 
+        if choice == "2":
+            self.database = FileDatabase()
+        else:
+            self.database = MemoryDatabase()
 
-def _read_int(prompt: str) -> int:
-    while True:
-        raw = input(prompt).strip()
+        self.table_name = "cars"
+
         try:
-            return int(raw)
-        except ValueError:
-            print("Ошибка: введите целое число.")
+            self.database.create_table(
+                self.table_name,
+                ("car_id", "brand", "model", "year", "horsepower"),
+            )
+        except Exception:
+            pass
 
+    def _print_menu(self) -> None:
+        print("\n=== Магазин Авто ===")
+        print("1. Добавить запись")
+        print("2. Показать все записи")
+        print("3. Найти записи по фильтру")
+        print("0. Выход")
 
-def _add_car() -> None:
-    print("\nДобавление записи")
+    def _read_int(self, prompt: str) -> int:
+        while True:
+            try:
+                return int(input(prompt).strip())
+            except ValueError:
+                print("Ошибка: введите целое число.")
 
-    car_id = _read_int("id: ")
-    brand = input("brand: ").strip()
-    model = input("model: ").strip()
-    year = _read_int("year: ")
-    horsepower = _read_int("horsepower: ")
+    def _add_car(self) -> None:
+        print("\nДобавление записи")
 
-    try:
-        record = car_table.create_record(
-            car_id, brand, model, year, horsepower
-        )
-        print(f"Запись добавлена: {record}")
+        record = {
+            "car_id": self._read_int("id: "),
+            "brand": input("brand: ").strip(),
+            "model": input("model: ").strip(),
+            "year": self._read_int("year: "),
+            "horsepower": self._read_int("horsepower: "),
+        }
 
-    except (InvalidCarDataError, DuplicateIDError) as exc:
-        print(f"Ошибка: {exc}")
+        try:
+            self.database.insert_record(self.table_name, record)
+            print("Запись добавлена:", record)
 
+        except (InvalidCarDataError, DuplicateIDError) as exc:
+            print("Ошибка:", exc)
 
-def _print_records(records: list[tuple[int, str, str, int, int]]) -> None:
-    if not records:
-        print("Записи не найдены.")
-        return
+    def _print_records(self, records: list[dict]) -> None:
+        if not records:
+            print("Записи не найдены.")
+            return
 
-    for record in records:
-        print(record)
+        for r in records:
+            print(r)
 
+    def _show_all_cars(self) -> None:
+        print("\nСписок записей")
+        records = self.database.select_records(self.table_name)
+        self._print_records(records)
 
-def _show_all_cars() -> None:
-    print("\nСписок записей")
-    _print_records(car_table.select_record())
-
-
-def _read_optional_int(prompt: str) -> int | None:
-    while True:
+    def _read_optional_int(self, prompt: str):
         raw = input(prompt).strip()
-
         if raw == "":
             return None
-
         try:
             return int(raw)
         except ValueError:
-            print("Ошибка: введите целое число или оставьте поле пустым.")
+            return None
 
+    def _find_cars_by_filter(self) -> None:
+        print("\nПоиск по фильтру")
 
-def _find_cars_by_filter() -> None:
-    print("\nПоиск по фильтру (Enter = пропустить поле)")
+        filters = {
+            "car_id": self._read_optional_int("id: "),
+            "brand": input("brand: ").strip() or None,
+            "model": input("model: ").strip() or None,
+            "year": self._read_optional_int("year: "),
+            "horsepower": self._read_optional_int("horsepower: "),
+        }
 
-    car_id = _read_optional_int("id: ")
-    brand = input("brand: ").strip() or None
-    model = input("model: ").strip() or None
-    year = _read_optional_int("year: ")
-    horsepower = _read_optional_int("horsepower: ")
+        filters = {k: v for k, v in filters.items() if v is not None}
 
-    records = car_table.select_record(
-        car_id=car_id,
-        brand=brand,
-        model=model,
-        year=year,
-        horsepower=horsepower,
-    )
+        records = self.database.select_records(self.table_name, **filters)
+        self._print_records(records)
 
-    _print_records(records)
+    def run(self) -> None:
+        while True:
+            self._print_menu()
+            action = input("Выберите действие: ").strip()
 
-
-def run() -> None:
-    while True:
-        _print_menu()
-        action = input("Выберите действие: ").strip()
-
-        if action == "1":
-            _add_car()
-
-        elif action == "2":
-            _show_all_cars()
-
-        elif action == "3":
-            _find_cars_by_filter()
-
-        elif action == "0":
-            print("Выход из программы.")
-            break
-
-        else:
-            print("Неизвестная команда. Повторите ввод.")
+            if action == "1":
+                self._add_car()
+            elif action == "2":
+                self._show_all_cars()
+            elif action == "3":
+                self._find_cars_by_filter()
+            elif action == "0":
+                print("Выход из программы.")
+                break
+            else:
+                print("Неизвестная команда")

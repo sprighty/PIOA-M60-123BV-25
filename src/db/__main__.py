@@ -1,8 +1,9 @@
-from .tui import run
+from .tui import TUI
 
 
 def main():
-    run()
+    app = TUI()
+    app.run()
 
 
 if __name__ == "__main__":

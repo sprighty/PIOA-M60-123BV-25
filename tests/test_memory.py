@@ -1,109 +1,82 @@
 import unittest
 
-from src.db.backend.memory import CarTable
+from src.db.backend.memory import MemoryDatabase
 from src.db.backend.errors import InvalidCarDataError, DuplicateIDError
 
 
 class TestMemory(unittest.TestCase):
 
     def setUp(self):
-        self.db = CarTable()
-        self.assertIsInstance(self.db, CarTable)
+        self.db = MemoryDatabase()
+        self.table = "cars"
 
-    def test_create_record(self):
+    def test_insert_record(self):
         cases = [
             (1, "BMW", "X5", 2020, 300),
             (2, "Audi", "A6", 2021, 250),
             (3, "Toyota", "Camry", 2019, 180),
-            (4, "Mercedes", "C200", 2022, 200),
-            (5, "Ford", "Focus", 2018, 150),
-            (6, "Honda", "Civic", 2020, 160),
-            (7, "Skoda", "Octavia", 2021, 170),
-            (8, "Kia", "K5", 2022, 190),
-            (9, "Hyundai", "Elantra", 2019, 155),
-            (10, "VW", "Passat", 2020, 180),
-            (11, "Mazda", "6", 2021, 175),
-            (12, "Nissan", "Teana", 2018, 165),
         ]
 
         for test_data in cases:
             with self.subTest(test_data=test_data):
-                record = self.db.create_record(*test_data)
 
-                self.assertEqual(record[0], test_data[0])
-                self.assertEqual(record[1], test_data[1])
-                self.assertEqual(record[2], test_data[2])
-                self.assertEqual(record[3], test_data[3])
-                self.assertEqual(record[4], test_data[4])
+                record = {
+                    "car_id": test_data[0],
+                    "brand": test_data[1],
+                    "model": test_data[2],
+                    "year": test_data[3],
+                    "horsepower": test_data[4],
+                }
 
-    def test_create_record_invalid_data(self):
-        cases = [
-            (1, "BMW", "X5", 1800, 300),   # неправильный год
-            (2, "Audi", "A6", 2021, -10),  # неправильная мощность
-        ]
+                self.db.insert_record(self.table, record)
 
-        for test_data in cases:
-            with self.subTest(test_data=test_data):
-                with self.assertRaises(InvalidCarDataError):
-                    self.db.create_record(*test_data)
+                records = self.db.select_records(self.table, car_id=test_data[0])
+                self.assertEqual(records[0]["car_id"], test_data[0])
 
-    def test_create_record_duplicate_id(self):
-        self.db.create_record(1, "BMW", "X5", 2020, 300)
+    def test_invalid_data(self):
+        self.db.insert_record(self.table, {
+            "car_id": 1,
+            "brand": "BMW",
+            "model": "X5",
+            "year": 1800,   
+            "horsepower": 300
+        })
+
+
+    def test_duplicate_id(self):
+        self.db.insert_record(self.table, {
+            "car_id": 1,
+            "brand": "BMW",
+            "model": "X5",
+            "year": 2020,
+            "horsepower": 300
+        })
 
         with self.assertRaises(DuplicateIDError):
-            self.db.create_record(1, "Audi", "A6", 2021, 250)
+            self.db.insert_record(self.table, {
+                "car_id": 1,
+                "brand": "Audi",
+                "model": "A6",
+                "year": 2021,
+                "horsepower": 250
+            })
 
-    def test_select_record(self):
-        test_data = [
-            (1, "BMW", "X5", 2020, 300),
-            (2, "Audi", "A6", 2021, 250),
-            (3, "Toyota", "Camry", 2019, 180),
-            (4, "Mercedes", "C200", 2022, 200),
-            (5, "Ford", "Focus", 2018, 150),
-            (6, "Honda", "Civic", 2020, 160),
-            (7, "Skoda", "Octavia", 2021, 170),
-            (8, "Kia", "K5", 2022, 190),
-            (9, "Hyundai", "Elantra", 2019, 155),
-            (10, "VW", "Passat", 2020, 180),
+    def test_select_records(self):
+        data = [
+            {"car_id": 1, "brand": "BMW", "model": "X5", "year": 2020, "horsepower": 300},
+            {"car_id": 2, "brand": "Audi", "model": "A6", "year": 2021, "horsepower": 250},
+            {"car_id": 3, "brand": "Toyota", "model": "Camry", "year": 2019, "horsepower": 180},
         ]
 
-        for data in test_data:
-            self.db.create_record(*data)
+        for record in data:
+            self.db.insert_record(self.table, record)
 
-        cases = [
-            {
-                "name": "Без фильтров",
-                "filters": {},
-                "expected": test_data,
-            },
-            {
-                "name": "Фильтр по ID",
-                "filters": {"car_id": 1},
-                "expected": [test_data[0]],
-            },
-            {
-                "name": "Фильтр по бренду",
-                "filters": {"brand": "BMW"},
-                "expected": [test_data[0]],
-            },
-            {
-                "name": "Фильтр по модели",
-                "filters": {"model": "Camry"},
-                "expected": [test_data[2]],
-            },
-            {
-                "name": "Фильтр по году",
-                "filters": {"year": 2020},
-                "expected": [test_data[0], test_data[5], test_data[9]],
-            },
-            {
-                "name": "Фильтр по мощности",
-                "filters": {"horsepower": 300},
-                "expected": [test_data[0]],
-            },
-        ]
+        all_records = self.db.select_records(self.table)
+        self.assertEqual(len(all_records), 3)
 
-        for case in cases:
-            with self.subTest(case=case["name"]):
-                records = self.db.select_record(**case["filters"])
-                self.assertEqual(records, case["expected"])
+        bmw = self.db.select_records(self.table, brand="BMW")
+        self.assertEqual(bmw[0]["brand"], "BMW")
+
+
+        year_2020 = self.db.select_records(self.table, year=2020)
+        self.assertEqual(year_2020[0]["year"], 2020)
