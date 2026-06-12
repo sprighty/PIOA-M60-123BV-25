@@ -1,6 +1,10 @@
 from .backend.memory import MemoryDatabase
 from .backend.file import FileDatabase
-from .backend.errors import InvalidCarDataError, DuplicateIDError
+from .backend.errors import (
+    InvalidCarDataError,
+    DuplicateIDError,
+    DatabaseError,
+)
 
 
 class TUI:
@@ -11,19 +15,17 @@ class TUI:
 
         choice = input(">> ").strip()
 
-        if choice == "2":
-            self.database = FileDatabase()
-        else:
-            self.database = MemoryDatabase()
-
+        self.database = FileDatabase() if choice == "2" else MemoryDatabase()
         self.table_name = "cars"
 
+        # создаём таблицу (без глушения всех ошибок)
         try:
             self.database.create_table(
                 self.table_name,
                 ("car_id", "brand", "model", "year", "horsepower"),
             )
-        except Exception:
+        except DatabaseError:
+            # таблица уже существует или другая ожидаемая БД-ошибка
             pass
 
     def _print_menu(self) -> None:
@@ -55,7 +57,8 @@ class TUI:
             self.database.insert_record(self.table_name, record)
             print("Запись добавлена:", record)
 
-        except (InvalidCarDataError, DuplicateIDError) as exc:
+        except DatabaseError as exc:
+            # ловим ВСЕ ошибки БД (как требует методичка)
             print("Ошибка:", exc)
 
     def _print_records(self, records: list[dict]) -> None:
@@ -68,8 +71,13 @@ class TUI:
 
     def _show_all_cars(self) -> None:
         print("\nСписок записей")
-        records = self.database.select_records(self.table_name)
-        self._print_records(records)
+
+        try:
+            records = self.database.select_records(self.table_name)
+            self._print_records(records)
+
+        except DatabaseError as exc:
+            print("Ошибка:", exc)
 
     def _read_optional_int(self, prompt: str):
         raw = input(prompt).strip()
@@ -93,8 +101,11 @@ class TUI:
 
         filters = {k: v for k, v in filters.items() if v is not None}
 
-        records = self.database.select_records(self.table_name, **filters)
-        self._print_records(records)
+        try:
+            records = self.database.select_records(self.table_name, **filters)
+            self._print_records(records)
+        except DatabaseError as exc:
+            print("Ошибка:", exc)
 
     def run(self) -> None:
         while True:

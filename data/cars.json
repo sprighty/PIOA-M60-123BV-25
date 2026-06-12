@@ -1,0 +1,25 @@
+{
+  "columns": [
+    "car_id",
+    "brand",
+    "model",
+    "year",
+    "horsepower"
+  ],
+  "records": [
+    {
+      "car_id": 1,
+      "brand": "1",
+      "model": "1",
+      "year": 1900,
+      "horsepower": 100
+    },
+    {
+      "car_id": 2,
+      "brand": "1",
+      "model": "1",
+      "year": 1910,
+      "horsepower": 110
+    }
+  ]
+}

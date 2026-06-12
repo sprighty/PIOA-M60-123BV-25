@@ -12,7 +12,7 @@ src/
 │   │   ├── errors.py
 │   │
 │   ├── tui.py
-│   ├── main.py
+│   ├── __main__.py
 │
 data/
 │   └── cars.json

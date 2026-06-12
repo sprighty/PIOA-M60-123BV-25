@@ -2,7 +2,10 @@ import json
 from pathlib import Path
 
 from .database import Database
-from .errors import InvalidStorageDataError, TableNotFoundError
+from .errors import (
+    InvalidStorageDataError,
+    TableNotFoundError,
+)
 from .table import Table
 
 
@@ -25,8 +28,11 @@ class FileDatabase(Database):
         try:
             with path.open("r", encoding="utf-8") as file:
                 data = json.load(file)
-        except json.JSONDecodeError as error:
-            raise InvalidStorageDataError("Некорректный JSON файл.") from error
+
+        except (json.JSONDecodeError, OSError) as error:
+            raise InvalidStorageDataError(
+                "Ошибка чтения файла таблицы."
+            ) from error
 
         return self._deserialize_table(data)
 
@@ -60,7 +66,4 @@ class FileDatabase(Database):
         if not isinstance(data["columns"], list) or not isinstance(data["records"], list):
             raise InvalidStorageDataError("Неверные типы данных в файле.")
 
-        columns = tuple(data["columns"])
-        records = data["records"]
-
-        return Table(columns, records)
+        return Table(tuple(data["columns"]), data["records"])
